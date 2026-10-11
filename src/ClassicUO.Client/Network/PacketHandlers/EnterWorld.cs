@@ -42,18 +42,46 @@ internal static class EnterWorld
 
         Client.Game.Audio.UpdateCurrentMusicVolume();
 
-        if (Client.Game.UO.Version >= ClassicUO.Utility.ClientVersion.CV_200)
+        // DM Test 2: reproduce the official client's opening packet order.
+        // Opt-in, version-limited and reversible; the regular path stays intact.
+        bool dmHandshakeTest =
+            Settings.GlobalSettings.ClientVersion == "6.0.14.3"
+            && Environment.GetEnvironmentVariable("TAZUO_DM_HANDSHAKE_TEST") == "1";
+
+        if (dmHandshakeTest)
         {
-            if (ProfileManager.CurrentProfile != null)
-                AsyncNetClient.Socket.Send_GameWindowSize(
-                    (uint)Client.Game.Scene.Camera.Bounds.Width,
-                    (uint)Client.Game.Scene.Camera.Bounds.Height
-                );
+            AsyncNetClient.Socket.Send_ClientVersion(Settings.GlobalSettings.ClientVersion);
 
+            // Original DM client sends non-zero viewport parameters here.
+            // During EnterWorld, TazUO may still have a zero-sized camera.
+            uint width = (uint)Client.Game.Scene.Camera.Bounds.Width;
+            uint height = (uint)Client.Game.Scene.Camera.Bounds.Height;
+            if (width == 0 || height == 0)
+            {
+                width = 800;
+                height = 600;
+            }
+
+            AsyncNetClient.Socket.Send_GameWindowSize(width, height);
             AsyncNetClient.Socket.Send_Language(Settings.GlobalSettings.Language);
+            // Send after version, size, language (same sequence as official DM client).
+            AsyncNetClient.Socket.Send_ClientType();
         }
+        else
+        {
+            if (Client.Game.UO.Version >= ClassicUO.Utility.ClientVersion.CV_200)
+            {
+                if (ProfileManager.CurrentProfile != null)
+                    AsyncNetClient.Socket.Send_GameWindowSize(
+                        (uint)Client.Game.Scene.Camera.Bounds.Width,
+                        (uint)Client.Game.Scene.Camera.Bounds.Height
+                    );
 
-        AsyncNetClient.Socket.Send_ClientVersion(Settings.GlobalSettings.ClientVersion);
+                AsyncNetClient.Socket.Send_Language(Settings.GlobalSettings.Language);
+            }
+
+            AsyncNetClient.Socket.Send_ClientVersion(Settings.GlobalSettings.ClientVersion);
+        }
 
         GameActions.SingleClick(world, world.Player);
         AsyncNetClient.Socket.Send_SkillsRequest(world.Player.Serial);
