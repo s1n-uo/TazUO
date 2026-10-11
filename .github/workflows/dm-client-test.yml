@@ -1,0 +1,43 @@
+name: DM TazUO Windows Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    name: Build DM test (win-x64)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout source and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Verify test branch has DM patch
+        shell: pwsh
+        run: |
+          if (-not (Select-String -Path "src/ClassicUO.Client/Network/OutgoingPackets.cs" -Pattern "TAZUO_DM_CLIENTTYPE_TEST" -Quiet)) {
+            throw "DM patch not found. Choose branch dm-clienttype-experiment in Run workflow."
+          }
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build Windows client
+        shell: pwsh
+        run: |
+          dotnet publish "src/ClassicUO.Client/ClassicUO.Client.csproj" -c Release -r win-x64 -o "build/dm-tazuo-win64"
+          if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed" }
+
+      - name: Upload Windows client
+        uses: actions/upload-artifact@v4
+        with:
+          name: TazUO-DM-test-win-x64
+          path: build/dm-tazuo-win64/
+          retention-days: 7
+          if-no-files-found: error
