@@ -2634,6 +2634,15 @@ namespace ClassicUO.Network
                 clientFlag |= (uint)(1 << i);
             }
 
+            // DM-UO compatibility experiment: opt-in, version-specific client-type flag.
+            // Default TazUO behavior remains unchanged when the variable is absent.
+            if (
+                Settings.GlobalSettings.ClientVersion == "6.0.14.3"
+                && Environment.GetEnvironmentVariable("TAZUO_DM_CLIENTTYPE_TEST") == "1"
+            )
+            {
+                clientFlag = 0x0000003F;
+            }
 
             writer.WriteUInt32BE(clientFlag);
 
