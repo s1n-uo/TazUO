@@ -1,11 +1,14 @@
-name: DM TazUO Windows Test
+name: DM TazUO Windows Test 2
 
 on:
   push:
     branches:
       - dm-clienttype-experiment
+      - dm-handshake-experiment
     paths:
       - 'src/ClassicUO.Client/Network/OutgoingPackets.cs'
+      - 'src/ClassicUO.Client/Network/PacketHandlers/EnterWorld.cs'
+      - 'src/ClassicUO.Client/Network/PacketHandlers/LoginComplete.cs'
       - '.github/workflows/dm-client-test.yml'
   workflow_dispatch:
 
@@ -26,7 +29,10 @@ jobs:
         shell: pwsh
         run: |
           if (-not (Select-String -Path "src/ClassicUO.Client/Network/OutgoingPackets.cs" -Pattern "TAZUO_DM_CLIENTTYPE_TEST" -Quiet)) {
-            throw "DM patch not found. Choose branch dm-clienttype-experiment in Run workflow."
+            throw "DM client-type test patch missing."
+          }
+          if (-not (Select-String -Path "src/ClassicUO.Client/Network/PacketHandlers/EnterWorld.cs" -Pattern "TAZUO_DM_HANDSHAKE_TEST" -Quiet)) {
+            throw "DM handshake test patch missing."
           }
 
       - name: Setup .NET 10
@@ -43,7 +49,7 @@ jobs:
       - name: Upload Windows client
         uses: actions/upload-artifact@v4
         with:
-          name: TazUO-DM-test-win-x64
+          name: TazUO-DM-Test2-win-x64
           path: build/dm-tazuo-win64/
           retention-days: 7
           if-no-files-found: error
