@@ -27,7 +27,11 @@ internal static class LoginComplete
             AsyncNetClient.Socket.Send_SkillsRequest(world.Player);
             ObjectActionQueue.Instance.Enqueue(ObjectActionQueueItem.DoubleClick(world.Player | 0x8000_0000), ActionPriority.UseItem);
 
-            if (Client.Game.UO.Version >= ClassicUO.Utility.ClientVersion.CV_306E)
+            // DM Test 2 already sent BF/0F with the original client's entry sequence.
+            bool dmHandshakeTest =
+                ClassicUO.Configuration.Settings.GlobalSettings.ClientVersion == "6.0.14.3"
+                && System.Environment.GetEnvironmentVariable("TAZUO_DM_HANDSHAKE_TEST") == "1";
+            if (Client.Game.UO.Version >= ClassicUO.Utility.ClientVersion.CV_306E && !dmHandshakeTest)
                 AsyncNetClient.Socket.Send_ClientType();
 
             if (Client.Game.UO.Version >= ClassicUO.Utility.ClientVersion.CV_305D)
