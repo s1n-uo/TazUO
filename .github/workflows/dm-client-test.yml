@@ -1,6 +1,12 @@
 name: DM TazUO Windows Test
 
 on:
+  push:
+    branches:
+      - dm-clienttype-experiment
+    paths:
+      - 'src/ClassicUO.Client/Network/OutgoingPackets.cs'
+      - '.github/workflows/dm-client-test.yml'
   workflow_dispatch:
 
 permissions:
