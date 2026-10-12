@@ -1,4 +1,4 @@
-name: DM TazUO Windows Test 6
+name: DM TazUO Windows Test 7
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
       - dm-viewport-experiment
       - dm-combined-experiment
       - dm-init-order-experiment
+      - dm-select-character-experiment
     paths:
       - 'src/ClassicUO.Client/Network/OutgoingPackets.cs'
       - 'src/ClassicUO.Client/Network/PacketHandlers/EnterWorld.cs'
@@ -47,6 +48,9 @@ jobs:
           if (-not (Select-String -Path "src/ClassicUO.Client/Network/PacketHandlers/EnterWorld.cs" -Pattern "TAZUO_DM_INIT_ORDER_TEST" -Quiet)) {
             throw "DM initial packet ordering patch missing."
           }
+          if (-not (Select-String -Path "src/ClassicUO.Client/Network/OutgoingPackets.cs" -Pattern "TAZUO_DM_SELECT_FLAG_TEST" -Quiet)) {
+            throw "DM 0x5D character-select flag patch missing."
+          }
 
       - name: Setup .NET 10
         uses: actions/setup-dotnet@v5
@@ -62,7 +66,7 @@ jobs:
       - name: Upload Windows client
         uses: actions/upload-artifact@v4
         with:
-          name: TazUO-DM-Test6-win-x64
+          name: TazUO-DM-Test7-win-x64
           path: build/dm-tazuo-win64/
           retention-days: 7
           if-no-files-found: error
