@@ -62,6 +62,27 @@ internal static class EnterWorld
                 height = 600;
             }
 
+            // DM Test 3: compare BF/05's second uint with the original client capture.
+            // This is a single-field experiment; no effect unless both flags are enabled.
+            // Use the raw hex value via environment variable, never a baked-in constant.
+            if (Environment.GetEnvironmentVariable("TAZUO_DM_VIEWPORT_TEST") == "1")
+            {
+                string rawHeight = Environment.GetEnvironmentVariable("TAZUO_DM_VIEWPORT_RAW_HEIGHT");
+
+                if (
+                    !string.IsNullOrWhiteSpace(rawHeight)
+                    && uint.TryParse(
+                        rawHeight,
+                        System.Globalization.NumberStyles.HexNumber,
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        out uint parsedHeight
+                    )
+                )
+                {
+                    height = parsedHeight;
+                }
+            }
+
             AsyncNetClient.Socket.Send_GameWindowSize(width, height);
             AsyncNetClient.Socket.Send_Language(Settings.GlobalSettings.Language);
             // Send after version, size, language (same sequence as official DM client).
