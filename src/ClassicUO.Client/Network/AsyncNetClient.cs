@@ -271,7 +271,19 @@ namespace ClassicUO.Network
                     }
                 }
 
-                return _localIP.Value;
+                uint localIp = _localIP.Value;
+
+                // DM compatibility Test 5: network byte order for the initial IPv4 seed.
+                // Only active with the explicit opt-in flag and the matching client version.
+                if (
+                    ClassicUO.Configuration.Settings.GlobalSettings.ClientVersion == "6.0.14.3"
+                    && Environment.GetEnvironmentVariable("TAZUO_DM_IP_ENDIAN_TEST") == "1"
+                )
+                {
+                    return System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(localIp);
+                }
+
+                return localIp;
             }
         }
 
