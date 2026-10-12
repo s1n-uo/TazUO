@@ -1,4 +1,4 @@
-name: DM TazUO Windows Test 3
+name: DM TazUO Windows Test 5
 
 on:
   push:
@@ -6,10 +6,12 @@ on:
       - dm-clienttype-experiment
       - dm-handshake-experiment
       - dm-viewport-experiment
+      - dm-combined-experiment
     paths:
       - 'src/ClassicUO.Client/Network/OutgoingPackets.cs'
       - 'src/ClassicUO.Client/Network/PacketHandlers/EnterWorld.cs'
       - 'src/ClassicUO.Client/Network/PacketHandlers/LoginComplete.cs'
+      - 'src/ClassicUO.Client/Network/AsyncNetClient.cs'
       - '.github/workflows/dm-client-test.yml'
   workflow_dispatch:
 
@@ -38,6 +40,9 @@ jobs:
           if (-not (Select-String -Path "src/ClassicUO.Client/Network/PacketHandlers/EnterWorld.cs" -Pattern "TAZUO_DM_VIEWPORT_TEST" -Quiet)) {
             throw "DM viewport field test patch missing."
           }
+          if (-not (Select-String -Path "src/ClassicUO.Client/Network/AsyncNetClient.cs" -Pattern "TAZUO_DM_IP_ENDIAN_TEST" -Quiet)) {
+            throw "DM IPv4 byte-order test patch missing."
+          }
 
       - name: Setup .NET 10
         uses: actions/setup-dotnet@v5
@@ -53,7 +58,7 @@ jobs:
       - name: Upload Windows client
         uses: actions/upload-artifact@v4
         with:
-          name: TazUO-DM-Test3-win-x64
+          name: TazUO-DM-Test5-win-x64
           path: build/dm-tazuo-win64/
           retention-days: 7
           if-no-files-found: error
