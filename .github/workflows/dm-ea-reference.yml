@@ -1,0 +1,36 @@
+name: DM EA 6.0.14.3 reference acquisition
+on:
+  push:
+    branches: [ea-client-reference-research]
+    paths: ['.github/workflows/dm-ea-reference.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  fetch-reference:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch historical UO client 6.0.14.3 (data only)
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --silent --show-error --retry 3 \
+            "https://raw.githubusercontent.com/draxinar/uoclients/main/client_6.0.14.3.exe" \
+            -o client_EA_6.0.14.3_reference.exe
+          test "$(stat -c '%s' client_EA_6.0.14.3_reference.exe)" = "2224128"
+          actual=$(git hash-object client_EA_6.0.14.3_reference.exe)
+          test "$actual" = "ee747e2fcb22ae5a089cc551c0e2f235e8716f1c"
+          sha256sum client_EA_6.0.14.3_reference.exe > SHA256-reference.txt
+          printf '%s\n' \
+            'Reference: draxinar/uoclients, extracted from historical EA patch archives' \
+            'Source Git blob SHA1: ee747e2fcb22ae5a089cc551c0e2f235e8716f1c' \
+            'Reference version: 6.0.14.3' > REFERENCE-README.txt
+      - name: Archive reference for offline binary comparison
+        uses: actions/upload-artifact@v4
+        with:
+          name: EA-UO-6.0.14.3-archival-reference
+          path: |
+            client_EA_6.0.14.3_reference.exe
+            SHA256-reference.txt
+            REFERENCE-README.txt
+          retention-days: 1
