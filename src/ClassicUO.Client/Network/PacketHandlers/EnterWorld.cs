@@ -48,6 +48,14 @@ internal static class EnterWorld
             Settings.GlobalSettings.ClientVersion == "6.0.14.3"
             && Environment.GetEnvironmentVariable("TAZUO_DM_HANDSHAKE_TEST") == "1";
 
+        bool dmOrderTest =
+            dmHandshakeTest
+            && Environment.GetEnvironmentVariable("TAZUO_DM_INIT_ORDER_TEST") == "1";
+
+        // Official client requests its own skills immediately after 0x1B, before 0xBD.
+        if (dmOrderTest)
+            AsyncNetClient.Socket.Send_SkillsRequest(world.Player.Serial);
+
         if (dmHandshakeTest)
         {
             AsyncNetClient.Socket.Send_ClientVersion(Settings.GlobalSettings.ClientVersion);
@@ -87,6 +95,14 @@ internal static class EnterWorld
             AsyncNetClient.Socket.Send_Language(Settings.GlobalSettings.Language);
             // Send after version, size, language (same sequence as official DM client).
             AsyncNetClient.Socket.Send_ClientType();
+
+            if (dmOrderTest)
+            {
+                // Official 6.0.14.3 client immediately double-clicks its own paperdoll
+                // (high bit set), then requests its own status. Do not queue this action.
+                AsyncNetClient.Socket.Send_DoubleClick(world.Player.Serial | 0x80000000u);
+                AsyncNetClient.Socket.Send_StatusRequest(world.Player.Serial);
+            }
         }
         else
         {
@@ -105,7 +121,8 @@ internal static class EnterWorld
         }
 
         GameActions.SingleClick(world, world.Player);
-        AsyncNetClient.Socket.Send_SkillsRequest(world.Player.Serial);
+        if (!dmOrderTest)
+            AsyncNetClient.Socket.Send_SkillsRequest(world.Player.Serial);
 
         if (world.Player.IsDead)
             world.ChangeSeason(ClassicUO.Game.Managers.Season.Desolation, 42);
