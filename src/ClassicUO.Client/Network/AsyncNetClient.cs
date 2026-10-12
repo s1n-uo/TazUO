@@ -271,7 +271,19 @@ namespace ClassicUO.Network
                     }
                 }
 
-                return _localIP.Value;
+                uint localIp = _localIP.Value;
+
+                // DM Test 4: original client encodes IPv4 bytes in network order.
+                // Limit this compatibility experiment to 6.0.14.3 and explicit opt-in.
+                if (
+                    ClassicUO.Configuration.Settings.GlobalSettings.ClientVersion == "6.0.14.3"
+                    && Environment.GetEnvironmentVariable("TAZUO_DM_IP_ENDIAN_TEST") == "1"
+                )
+                {
+                    return System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(localIp);
+                }
+
+                return localIp;
             }
         }
 
