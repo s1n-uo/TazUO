@@ -496,8 +496,34 @@ namespace ClassicUO.Network
             writer.WriteUInt32BE(0xEDEDEDED);
             writer.WriteASCII(name, 30);
             writer.WriteZero(2);
-            writer.WriteUInt32BE((uint)Client.Game.UO.Protocol);
-            writer.WriteZero(24);
+            // DM Test 7: verified differences in the original client's 0x5D packet.
+            // These are independent switches; keep all other clients unchanged.
+            bool dmSelectVersion = Settings.GlobalSettings.ClientVersion == "6.0.14.3";
+            uint protocolFlags = (uint)Client.Game.UO.Protocol;
+
+            if (
+                dmSelectVersion
+                && Environment.GetEnvironmentVariable("TAZUO_DM_SELECT_FLAG_TEST") == "1"
+            )
+                protocolFlags = 0x0000003Fu;
+
+            writer.WriteUInt32BE(protocolFlags);
+
+            if (
+                dmSelectVersion
+                && Environment.GetEnvironmentVariable("TAZUO_DM_SELECT_RESERVED_TEST") == "1"
+            )
+            {
+                // Byte 48 was 0x93 in the original capture. Its stability is
+                // unverified, so test it separately, never in the default path.
+                writer.WriteZero(7);
+                writer.WriteUInt8(0x93);
+                writer.WriteZero(16);
+            }
+            else
+            {
+                writer.WriteZero(24);
+            }
             writer.WriteUInt32BE(index);
             writer.WriteUInt32BE(ipclient);
 
